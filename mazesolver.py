@@ -1,71 +1,66 @@
-# maze_solver.py
-
-from collections import deque
-import copy
+import os
 
 # Define the maze
 maze = [
-    ['S', ' ', '#', ' ', 'E'],
-    ['#', ' ', '#', ' ', '#'],
-    ['#', ' ', ' ', ' ', '#'],
-    ['#', '#', '#', ' ', '#']
+    ['S', ' ', '#', ' ', ' ', 'E'],
+    ['#', ' ', '#', ' ', '#', '#'],
+    ['#', ' ', ' ', ' ', ' ', '#'],
+    ['#', '#', '#', '#', ' ', '#']
 ]
 
-ROWS = len(maze)
-COLS = len(maze[0])
-DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
+# Find the start position
+for i in range(len(maze)):
+    for j in range(len(maze[0])):
+        if maze[i][j] == 'S':
+            player_pos = [i, j]
 
-def find_start():
-    for r in range(ROWS):
-        for c in range(COLS):
-            if maze[r][c] == 'S':
-                return r, c
-    return None
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-def is_valid(r, c):
-    return 0 <= r < ROWS and 0 <= c < COLS and maze[r][c] != '#'
+def display_maze():
+    clear_screen()
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if [i, j] == player_pos:
+                print('P', end=' ')
+            else:
+                print(maze[i][j], end=' ')
+        print()
 
-def bfs(start):
-    queue = deque()
-    queue.append((start, [start]))  # (current_position, path_so_far)
-    visited = set()
-    visited.add(start)
+def move_player(direction):
+    dr, dc = 0, 0
+    if direction == 'w':
+        dr = -1
+    elif direction == 's':
+        dr = 1
+    elif direction == 'a':
+        dc = -1
+    elif direction == 'd':
+        dc = 1
+    else:
+        return  # Invalid key
 
-    while queue:
-        (r, c), path = queue.popleft()
+    new_r = player_pos[0] + dr
+    new_c = player_pos[1] + dc
 
-        if maze[r][c] == 'E':
-            return path
-
-        for dr, dc in DIRECTIONS:
-            nr, nc = r + dr, c + dc
-            if is_valid(nr, nc) and (nr, nc) not in visited:
-                queue.append(((nr, nc), path + [(nr, nc)]))
-                visited.add((nr, nc))
-    return None
-
-def print_maze_path(path):
-    maze_copy = copy.deepcopy(maze)
-    for r, c in path:
-        if maze_copy[r][c] not in ['S', 'E']:
-            maze_copy[r][c] = '*'
-
-    print("\nSolved Maze:")
-    for row in maze_copy:
-        print(' '.join(row))
+    if 0 <= new_r < len(maze) and 0 <= new_c < len(maze[0]):
+        if maze[new_r][new_c] != '#':
+            player_pos[0] = new_r
+            player_pos[1] = new_c
 
 def main():
-    start = find_start()
-    if not start:
-        print("Start point 'S' not found in the maze.")
-        return
+    while True:
+        display_maze()
 
-    path = bfs(start)
-    if path:
-        print("Path found!")
-        print_maze_path(path)
-    else:
-        print("No path found from 'S' to 'E'.")
+        if maze[player_pos[0]][player_pos[1]] == 'E':
+            print("\n🎉 Congratulations! You've reached the exit.")
+            break
+
+        move = input("Move (W/A/S/D): ").lower()
+        if move not in ['w', 'a', 's', 'd']:
+            print("Invalid move. Use W (up), A (left), S (down), D (right).")
+        else:
+            move_player(move)
 
 if __name__ == "__main__":
     main()
