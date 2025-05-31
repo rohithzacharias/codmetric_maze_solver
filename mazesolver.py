@@ -1,6 +1,7 @@
-import os
+import tkinter as tk
+from tkinter import messagebox
 
-# Define the maze
+# Maze Definition
 maze = [
     ['S', ' ', '#', ' ', ' ', 'E'],
     ['#', ' ', '#', ' ', '#', '#'],
@@ -8,59 +9,73 @@ maze = [
     ['#', '#', '#', '#', ' ', '#']
 ]
 
-# Find the start position
-for i in range(len(maze)):
-    for j in range(len(maze[0])):
+ROWS = len(maze)
+COLS = len(maze[0])
+CELL_SIZE = 50
+
+# Find Start Position
+for i in range(ROWS):
+    for j in range(COLS):
         if maze[i][j] == 'S':
             player_pos = [i, j]
 
-def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
+# GUI Setup
+root = tk.Tk()
+root.title("Maze Game - GUI")
 
-def display_maze():
-    clear_screen()
-    for i in range(len(maze)):
-        for j in range(len(maze[0])):
-            if [i, j] == player_pos:
-                print('P', end=' ')
+canvas = tk.Canvas(root, width=COLS * CELL_SIZE, height=ROWS * CELL_SIZE)
+canvas.pack()
+
+# Draw the Maze Grid
+def draw_maze():
+    canvas.delete("all")
+    for r in range(ROWS):
+        for c in range(COLS):
+            x1 = c * CELL_SIZE
+            y1 = r * CELL_SIZE
+            x2 = x1 + CELL_SIZE
+            y2 = y1 + CELL_SIZE
+
+            if maze[r][c] == '#':
+                color = "black"
+            elif maze[r][c] == 'E':
+                color = "green"
+            elif maze[r][c] == 'S':
+                color = "lightblue"
             else:
-                print(maze[i][j], end=' ')
-        print()
+                color = "white"
 
-def move_player(direction):
-    dr, dc = 0, 0
-    if direction == 'w':
-        dr = -1
-    elif direction == 's':
-        dr = 1
-    elif direction == 'a':
-        dc = -1
-    elif direction == 'd':
-        dc = 1
-    else:
-        return  # Invalid key
+            canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="gray")
 
-    new_r = player_pos[0] + dr
-    new_c = player_pos[1] + dc
+    # Draw Player
+    pr, pc = player_pos
+    x = pc * CELL_SIZE + CELL_SIZE // 2
+    y = pr * CELL_SIZE + CELL_SIZE // 2
+    canvas.create_oval(x-15, y-15, x+15, y+15, fill="red")
 
-    if 0 <= new_r < len(maze) and 0 <= new_c < len(maze[0]):
-        if maze[new_r][new_c] != '#':
-            player_pos[0] = new_r
-            player_pos[1] = new_c
+# Move Function
+def move(dr, dc):
+    r, c = player_pos
+    nr, nc = r + dr, c + dc
 
-def main():
-    while True:
-        display_maze()
+    if 0 <= nr < ROWS and 0 <= nc < COLS and maze[nr][nc] != '#':
+        player_pos[0], player_pos[1] = nr, nc
+        draw_maze()
 
-        if maze[player_pos[0]][player_pos[1]] == 'E':
-            print("\n🎉 Congratulations! You've reached the exit.")
-            break
+        if maze[nr][nc] == 'E':
+            messagebox.showinfo("🎉 You Win!", "Congratulations! You've reached the end of the maze.")
+            root.quit()
 
-        move = input("Move (W/A/S/D): ").lower()
-        if move not in ['w', 'a', 's', 'd']:
-            print("Invalid move. Use W (up), A (left), S (down), D (right).")
-        else:
-            move_player(move)
+# Control Buttons with Labels
+control_frame = tk.Frame(root)
+control_frame.pack(pady=10)
 
-if __name__ == "__main__":
-    main()
+tk.Button(control_frame, text="⬆️ Up (W)", width=12, command=lambda: move(-1, 0)).grid(row=0, column=1)
+tk.Button(control_frame, text="⬅️ Left (A)", width=12, command=lambda: move(0, -1)).grid(row=1, column=0)
+tk.Button(control_frame, text="➡️ Right (D)", width=12, command=lambda: move(0, 1)).grid(row=1, column=2)
+tk.Button(control_frame, text="⬇️ Down (S)", width=12, command=lambda: move(1, 0)).grid(row=2, column=1)
+
+# Initial draw
+draw_maze()
+
+root.mainloop()
